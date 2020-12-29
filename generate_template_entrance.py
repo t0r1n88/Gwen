@@ -44,7 +44,7 @@ for key, value in data.items():
 
 for number_order, value in data.items():
     # Создаем документ
-    doc = DocxTemplate('template/template.docx')
+    doc = DocxTemplate('template/Шаблон Приказ о зачислении.docx')
     # Заполняем словарь контекста
     context = {'date_order': value['date_order'], 'number_order': value['number_order'],
                'type_prog': value['type_prog'],

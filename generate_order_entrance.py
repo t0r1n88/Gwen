@@ -5,10 +5,7 @@ from docxtpl import DocxTemplate
 import csv
 
 # Загружаем данные
-reader = csv.DictReader(open('data.csv'), delimiter=';')
-
-# Создаем словарь, где номер приказа будет являтся ключом, а остальные данные списком словарей.
-# Для того чтобы записывать несколько студентов  в  один приказ
+reader = csv.DictReader(open('Данные для приказа о зачислении.csv'), delimiter=';')
 
 # Список для номеров приказов
 lst_order = []
@@ -26,7 +23,7 @@ data_all = {number_order: [] for number_order in unique_order}
 # Заполняем словарь ФИО студентов
 # Заполняем словарь со всеми данными
 # Пересоздаем объект DictReader, потому что при первом использовании он исчерпался
-reader = csv.DictReader(open('data.csv'), delimiter=';')
+reader = csv.DictReader(open('Данные для приказа о зачислении.csv'), delimiter=';')
 for row in list(reader):
     data_fio[row['number_order']].append(row['FIO'])
     data_all[row['number_order']].append(row)

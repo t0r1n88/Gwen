@@ -4,6 +4,7 @@ import os
 
 # Создаем базовый  датафрейм
 base_df = pd.read_excel('temp/columns.xlsx')
+print(base_df.shape)
 # base_df = pd.DataFrame(columns=['Группа', 'Специальность', 'Трудоустроен', 'ИП', 'Самозанятые',
 #        'Призваны в ВС', 'Продолжают обучение',
 #        'Находятся в отпуске по уходу за ребенком',
@@ -26,7 +27,6 @@ base_df = pd.read_excel('temp/columns.xlsx')
 example_dir = 'C:/Users/1/PycharmProjects/Gwen/resources'
 with os.scandir(example_dir) as files:
     lst_files = [file.name for file in files if file.is_file() and file.name.endswith('xlsx')]
-print(base_df.columns)
 # Перебираем файлы
 for file in lst_files:
     df = pd.read_excel(f'resources/{file}')
@@ -34,9 +34,10 @@ for file in lst_files:
     df = df.drop(['ФИО'],axis=1)
 
     # добавляем параметр numeric_only чтобы текстовые значения также суммировались
-    temp_df = df.groupby(['Специальность','Группа']).sum(numeric_only=False)
-    # print(temp_df)
-    # base_df.append(temp_df,ignore_index=True)
-    # temp_df.to_excel('temp.xlsx',index=True)
-    # temp_df.to_excel(f'{file}',index=True)
-base_df.to_excel('Промежуточный результат.xlsx',index=True)
+    temp_df = df.groupby(['Специальность','Группа'],).sum(numeric_only=False).reset_index()
+    # Добавляем данные в итоговый датафрейм
+    base_df = base_df.append(temp_df,ignore_index=True)
+
+    # temp_df.to_excel(f'{file}',index=False)
+# Сохраняем итоговый результат
+base_df.to_excel('Промежуточный результат.xlsx',index=False)

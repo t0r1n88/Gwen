@@ -8,6 +8,6 @@ df_slave = pd.read_excel('resources/dop_status.xlsx',usecols=['Абитурие�
 
 all_df = pd.merge(df_main,df_slave,left_on='ФИО',right_on='Абитуриент')
 
-out_df = all_df[['ФИО','Доп. статус']]
+out_df = all_df[['ФИО','Направление, специальность, профессия','Доп. статус','Адрес регистрации','Адрес фактический']]
 
 out_df.to_excel('Orphans_report.xlsx',index=False)

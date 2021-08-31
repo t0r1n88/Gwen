@@ -141,6 +141,7 @@ def processing_type_df(df):
         'int64')
     # Устанавливаем для колонки Статус тип поля текстовый
     df['Статус'] = df['Статус'].astype('str')
+    df['Статус'] = ''
     return df
 
 
@@ -172,6 +173,54 @@ def check_columns_name(base_df, checked_df):
         return None
 
 
+def check_correct_data(df, name_file):
+    """
+    Функция для проверки итогов по разделам:фактическое, планируемое, инвалиды
+    :param df: датафрейм со списком студентов
+    :param name_file: имя проверяемого файла
+    :return: датафрейм с дополнительным столбцом содержащим в себе итог проверки.
+    """
+    # Создаем датафрейм для записи итогов проверки и сохранения в excel
+    output_check_df = pd.DataFrame(columns=['ФИО', 'Факт', 'План'])
+    # Заменяем в колонках Прочее и План.прочее текст на числа, для удобства подсчетов
+
+    df['Прочее'] = df['Прочее'].apply(lambda x: 0 if x == 'Нет,' else 1)
+    df['План.Прочее'] = df['План.Прочее'].apply(lambda x: 0 if x == 'Нет' else 1)
+
+    # for row in df.itertuples(index=False,name='Студент'):
+    #     print(row)
+    #     fact_status = ''
+    #     plan_status = ''
+    #     real_sum =row[4] +row[5]+row[6]+row[7]+row[8]+row[9]+row[10]+row[11]+row[12]+row[13]
+    #     if real_sum != 1:
+    #         fact_status = f'Фактические показатели {row[0]} введены некорректно, студент посчитан несколько раз или не посчитан.'
+    #
+    #     plan_sum = row[14] +row[15]+row[16]+row[17]+row[18]+row[19]+row[20]+row[21]+row[22]+row[23]
+    #     if plan_sum != 1:
+    #         plan_status = f'Планируемые показатели {row[0]} введены некорректно, студент посчитан несколько раз или не посчитан.'
+    #
+    #     # output_check_df.iloc[0,1] = row[0]
+    for row in df.itertuples(index=True, name='Студент'):
+        fact_status = 'Данные корректны'
+        plan_status = 'Данные корректны'
+        real_sum = row[5] + row[6] + row[7] + row[8] + row[9] + row[10] + row[11] + row[12] + row[13] + row[14]
+        if real_sum != 1:
+            fact_status = f'Фактические показатели {row[1]} введены некорректно, студент посчитан несколько раз или не посчитан.'
+
+
+        plan_sum = row[15] + row[16] + row[17] + row[18] + row[19] + row[20] + row[21] + row[22] + row[23] + row[24]
+        if plan_sum != 1:
+            plan_status = f'Планируемые показатели {row[1]} введены некорректно, студент посчитан несколько раз или не посчитан.'
+
+        output_check_df.loc[row[0], 'ФИО'] = row[1]
+        output_check_df.loc[row[0], 'Факт'] = fact_status
+        output_check_df.loc[row[0], 'План'] = plan_status
+
+    output_check_df.to_excel(f'Итог проверки {name_file}.xlsx', index=False)
+
+    # TODO Реализовать проверку по категориям, после получения нового шаблона
+
+
 # Создаем базовый  датафрейм
 base_df = pd.read_excel('temp/columns.xlsx')
 
@@ -187,29 +236,32 @@ for file in lst_files:
     if not check_columns_name(base_df, df):
         print('Некорректное количество колонок или название колонок')
         continue
+    # Обрабатываем колонки, приводим к типу инт, заполняем пропуски
+    df = processing_type_df(df)
 
+    # Проверяем на правильность заполнения, совпадают ли суммы
+    checked_df = df.copy()
+    # if not check_correct_data(checked_df,file):
+    #     print('Не совпадают суммы, проверьте')
+    #     continue
+    check_correct_data(checked_df, file)
     # Удаляем столбец с ФИО, так как при группировке он будет мешать
     df = df.drop(['ФИО'], axis=1)
 
-    df = processing_type_df(df)
+    # Проверяем корректность заполнения
 
     # добавляем параметр numeric_only чтобы текстовые значения также суммировались
     temp_df = df.groupby(['Специальность', 'Группа', 'Куратор'], ).sum(numeric_only=False).reset_index()
-    # TODO проверка количества строк. Должно быть не более 1, если больше то в файле присутствует еще одна группа,куратор,специальность
     if not check_quantity_row(temp_df):
         print('В файле присутствуют другие специальности,группы,кураторы или есть ошибки в написании')
         continue
 
     # Копируем датафрейм, так как внутри функции он будет изменятся
-    checked_df = temp_df.copy()
-    # Получаем результат проверки
-    verification_status = check_data(temp_df, df.shape[0])
-    # Добавляем данные в итоговый датафрейм
-    # checked_df['Статус'] = verification_status
 
-    base_df = base_df.append(checked_df, ignore_index=True)
+    base_df = base_df.append(temp_df, ignore_index=True)
 
 # Сохраняем промежуточный  результат для того чтобы легче было отслеживать корректность данных
+base_df = base_df.drop('ФИО', axis=1)
 base_df.to_excel('Промежуточный результат.xlsx', index=False)
 
 # Проводим итоговую группировку

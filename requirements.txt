@@ -1,4 +1,7 @@
 six
 python-docx
-jinja2
+jinja2~=2.11.2
 lxml
+pandas~=1.0.5
+openpyxl~=3.0.4
+

@@ -222,15 +222,62 @@ class Ui_MainWindow(object):
             output_check_df.loc[row[0], 'План'] = plan_status
 
         output_check_df.to_excel(f'{self.output_dir}/Итог проверки_{name_file}', index=False)
+    def check_quantity_row(self,df):
+        """
+        Метод для проверки количества строк в сгруппированном датафрейме. На случай если в списке группы окажутся другие
+        специальности или кураторы, ну или просто преподаватель опечатается
+        :param df: сгруппированный датафрейм
+        :return: статус проверки
+        :return:
+        """
+        # В корректном файле должно быть 1 строка и 32 колонки
+        if df.shape[0] != 1 or df.shape[1] != 32:
+            return None
+        else:
+            return True
 
+    def processing_column_other(self,text):
+        """
+        Метод для подсчета причин указанных в колонке Прочее
+        :param text: Текст разделенный запятыми
+        :return: Текст разделенный знаками переноса вида:
+         семейные обстоятельства -3
+         переезд -4
+        :return:
+        """
+        if text == 'Нет':
+            return ''
+        else:
+            # Создаем словарь для подсчета
+            word_frequency = dict()
+            # Очищаем текст от возможных знаков переноса
 
+            text = text.replace('', '')
+            text = text.replace("\n", " ")
+            # Создаем список
+            word_lst = text.split(',')
+
+            # Итерируемся по списку слов и подсчитываем количество
+            for word in word_lst:
+                # о костыль.Но странно почему replace не срабатывает
+                if word == '':
+                    continue
+                if word in word_frequency:
+                    # Создаем ключ с заглавной буквы, чтобы потом не тратить на это время
+                    word_frequency[word] += 1
+                else:
+                    word_frequency[word] = 1
+            # Превращаем словарь в список, чтобы метод join правильно отработал
+            output_lst = []
+            for reason in word_frequency.items():
+                output_lst.append(f'{reason[0]} - {reason[1]}')
+            return ',\n'.join(output_lst)
 
 
     def run_script(self):
         """
         Метод запускающий обработку
         """
-        print(self.output_dir)
         # Перебираем файлы
         for file in self.filenames:
             # Получаем имя файла для того чтобы сохранять называть файлы проверки
@@ -246,6 +293,34 @@ class Ui_MainWindow(object):
             # Проверяем на правильность заполнения, совпадают ли суммы
             checked_df = df.copy()
             self.check_correct_data(checked_df, file_name)
+
+            # Удаляем столбец с ФИО, так как при группировке он будет мешать
+            df = df.drop(['ФИО'], axis=1)
+            # добавляем параметр numeric_only чтобы текстовые значения также суммировались
+            temp_df = df.groupby(['Специальность', 'Группа', 'Куратор'], ).sum(numeric_only=False).reset_index()
+
+            # Проверяем правильность группировки, есть ли в файле другие специальности,кураторы, группы
+            if not self.check_quantity_row(temp_df):
+                print('В файле присутствуют другие специальности,группы,кураторы или есть ошибки в написании')
+                continue
+            self.base_df = self.base_df.append(temp_df, ignore_index=True)
+        self.base_df = self.base_df.drop('ФИО', axis=1)
+        self.base_df.to_excel(f'{self.output_dir}/Промежуточный результат.xlsx', index=False)
+
+        # Проводим итоговую группировку
+        # Нужно провести подсчет причин в графе Прочие.
+        itog_df = self.base_df.groupby(['Специальность']).sum(numeric_only=False).reset_index()
+
+        # Обрабатываем колонку Прочее
+
+        itog_df['Прочее'] = itog_df['Прочее'].apply(self.processing_column_other)
+        itog_df['План.Прочее'] = itog_df['План.Прочее'].apply(self.processing_column_other)
+
+        # Сохраняем результат
+        itog_df.to_excel(f'{self.output_dir}/Итоговый результат.xlsx', index=False)
+
+
+
     # для вывода ошибок в консоль
     sys.excepthook = excepthook
 

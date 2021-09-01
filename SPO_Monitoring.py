@@ -209,7 +209,7 @@ for file in lst_files:
         print('В файле присутствуют другие специальности,группы,кураторы или есть ошибки в написании')
         continue
 
-    # Копируем датафрейм, так как внутри функции он будет изменятся
+
 
     base_df = base_df.append(temp_df, ignore_index=True)
 
@@ -222,8 +222,7 @@ base_df.to_excel('Промежуточный результат.xlsx', index=Fal
 itog_df = base_df.groupby(['Специальность']).sum(numeric_only=False).reset_index()
 
 # Обрабатываем колонку Прочее
-# Сначала приводим заменяем возможные 0.0 на строку Отсутствуют
-# itog_df['Прочее'] = itog_df['Прочее'].apply(lambda x: 'Отсутствуют' if not type(x) == str else x)
+
 itog_df['Прочее'] = itog_df['Прочее'].apply(processing_column_other)
 itog_df['План.Прочее'] = itog_df['План.Прочее'].apply(processing_column_other)
 

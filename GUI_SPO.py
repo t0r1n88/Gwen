@@ -2,7 +2,8 @@
 
 import pandas as pd
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtWidgets import QFileDialog
+from PyQt5.QtWidgets import QFileDialog,QLabel
+from PyQt5.QtGui import QIcon, QPixmap
 import traceback
 import sys
 
@@ -32,6 +33,7 @@ class Ui_MainWindow(object):
         MainWindow.resize(542, 537)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
+        # Метка
         self.label = QtWidgets.QLabel(self.centralwidget)
         self.label.setEnabled(True)
         self.label.setGeometry(QtCore.QRect(170, 10, 231, 61))
@@ -39,6 +41,10 @@ class Ui_MainWindow(object):
         font.setPointSize(20)
         self.label.setFont(font)
         self.label.setObjectName("label")
+
+
+
+
 
         # Создаем базовый датафрейм для экземпляра класса
         self.base_df = Ui_MainWindow.template_df.copy()
@@ -81,7 +87,7 @@ class Ui_MainWindow(object):
         self.label.setText(_translate("MainWindow", "Обработка данных"))
         self.getFileNamesButton.setText(_translate("MainWindow", "Выберите файлы"))
         self.getDirectoryButton.setText(_translate("MainWindow", "Выберите конечную папку"))
-        self.makeButton.setText(_translate("MainWindow", "Выполнить"))
+        self.makeButton.setText(_translate("MainWindow", "Выполнить обработку"))
 
     def getDirectory(self):
         """
